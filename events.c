@@ -1,14 +1,17 @@
 #include "events.h"
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 static int is_data_packet(const u_char * macPacket, size_t len);
 static client_event * read_mac_info(const u_char * macPacket, size_t len);
 static int radiotap_rssi(const u_char * header);
 
 client_event * client_event_read(pcap_t * handle) {
-  while (true) {
+  while (1) {
     struct pcap_pkthdr * header;
     const u_char * buffer;
-    int ret = pcap_next_ex(pcapHandle, &header, &buffer);
+    int ret = pcap_next_ex(handle, &header, &buffer);
     if (ret < 0) {
       return NULL;
     }
@@ -27,17 +30,17 @@ client_event * client_event_read(pcap_t * handle) {
       continue;
     }
 
-    client_info * res = read_mac_info(macPacket, macPacketLen);
-    res.timestamp = header.ts;
-    res.rssi = radiotap_rssi(buffer);
-    res.request_info = http_req_in_packet(macPacket, macPacketLen);
+    client_event * res = read_mac_info(macPacket, macPacketLen);
+    res->timestamp = header->ts;
+    res->rssi = radiotap_rssi(buffer);
+    res->request_info = http_req_in_packet(macPacket, macPacketLen);
     return res;
   }
 }
 
 void client_event_free(client_event * e) {
-  if (e.request_info != NULL) {
-    http_req_free(e.request_info);
+  if (e->request_info != NULL) {
+    http_req_free(e->request_info);
   }
   free(e);
 }
@@ -53,23 +56,24 @@ static int is_data_packet(const u_char * macPacket, size_t len) {
 static client_event * read_mac_info(const u_char * macPacket, size_t len) {
   client_event * event = (client_event *)malloc(sizeof(client_event));
 
-  int minor = (int)(macPacket[0] >> 4) & 0xf;
   int toDS = (int)(macPacket[1] & 1);
   int fromDS = (int)(macPacket[1] & 2);
 
   if (!fromDS && toDS) {
-    memcpy(event.accessPoint, macPacket+4, 6);
-    memcpy(event.client, macPacket+10, 6);
-    event.type = CLIENT_EVENT_TO_AP;
+    memcpy(event->accessPoint, macPacket+4, 6);
+    memcpy(event->client, macPacket+10, 6);
+    event->type = CLIENT_EVENT_TO_AP;
   } else if (!fromDS && !toDS) {
-    memcpy(event.accessPoint, macPacket+16, 6);
-    memcpy(event.client, macPacket+10, 6);
-    event.type = CLIENT_EVENT_INTER_HOST;
+    memcpy(event->accessPoint, macPacket+16, 6);
+    memcpy(event->client, macPacket+10, 6);
+    event->type = CLIENT_EVENT_INTER_HOST;
   } else if (fromDS && !toDS) {
-    memcpy(event.accessPoint, macPacket+10, 6);
-    memcpy(event.client, macPacket+4, 6);
-    event.type = CLIENT_EVENT_FROM_AP;
+    memcpy(event->accessPoint, macPacket+10, 6);
+    memcpy(event->client, macPacket+4, 6);
+    event->type = CLIENT_EVENT_FROM_AP;
   }
+
+  return event;
 }
 
 static int radiotap_rssi(const u_char * packet) {

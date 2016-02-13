@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <pcap.h>
 
+static int get_channel_list(int argc, const char ** argv, int * channels);
+
 int main(int argc, const char ** argv) {
   if (argc < 3) {
     fprintf(stderr, "Usage: %s <interface> <channel> [channel ...]\n", argv[0]);
@@ -21,7 +23,7 @@ int main(int argc, const char ** argv) {
   }
 
   int * channels = (int *)malloc(sizeof(int)*(argc-2));
-  if (getChannelList(argc, argv, channels) < 0) {
+  if (get_channel_list(argc, argv, channels) < 0) {
     fprintf(stderr, "invalid channel list.\n");
     return 1;
   }
@@ -29,7 +31,7 @@ int main(int argc, const char ** argv) {
   free(channels);
 }
 
-int getChannelList(int argc, const char ** argv, int * channels) {
+static int get_channel_list(int argc, const char ** argv, int * channels) {
   for (int i = 2; i < argc; i++) {
     channels[i-2] = atoi(argv[i]);
     if (!channels[i-2]) {

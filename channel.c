@@ -1,4 +1,6 @@
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int switch_channel(const char * interface, int channel) {
   if (strlen(interface) > 16 || channel <= 0 || channel > 999) {
@@ -7,6 +9,6 @@ int switch_channel(const char * interface, int channel) {
 
   // TODO: look into using libiw here.
   char command[64];
-  snprintf(command, sizeof(command), "iwconfig %s channel %d", interface, channel)
+  snprintf(command, sizeof(command), "iwconfig %s channel %d", interface, channel);
   return system(command);
 }

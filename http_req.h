@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 typedef struct {
   char method[5];
   char * path;

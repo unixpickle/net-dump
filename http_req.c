@@ -1,4 +1,8 @@
 #include "http_req.h"
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 
 static char * find_http_header(const char * packet, size_t len, const char * header);
 static int string_has_header(const char * str, const char * header);
@@ -36,24 +40,24 @@ http_req * http_req_in_packet(const void * packet, size_t len) {
 
   http_req * req = (http_req *)malloc(sizeof(http_req));
   bzero(req, sizeof(http_req));
-  strncpy(req.method, reqMethod, sizeof(req.method)-1);
-  req.path = (char *)malloc(pathLen+1);
-  req.path[pathLen] = 0;
-  memcpy(req.path, packetStr+pathStartIndex, pathLen);
+  strncpy(req->method, reqMethod, sizeof(req->method)-1);
+  req->path = (char *)malloc(pathLen+1);
+  req->path[pathLen] = 0;
+  memcpy(req->path, packetStr+pathStartIndex, pathLen);
 
-  req.host = find_http_header(packetStr, len-httpIndex, "host");
-  req.userAgent = find_http_header(packetStr, len-httpIndex, "user-agent");
+  req->host = find_http_header(packetStr, len-httpIndex, "host");
+  req->userAgent = find_http_header(packetStr, len-httpIndex, "user-agent");
 
   return req;
 }
 
 void http_req_free(http_req * r) {
-  free(r.path);
-  if (r.host !== NULL) {
-    free(r.host);
+  free(r->path);
+  if (r->host != NULL) {
+    free(r->host);
   }
-  if (r.userAgent !== NULL) {
-    free(r.userAgent);
+  if (r->userAgent != NULL) {
+    free(r->userAgent);
   }
   free(r);
 }
@@ -65,7 +69,7 @@ static char * find_http_header(const char * packet, size_t len, const char * hea
   for (size_t i = 0; i < len+1; i++) {
     char ch = 0;
     if (i < len) {
-      char ch = packet[i];
+      ch = packet[i];
     }
     if (ch == 0 || ch == '\n' || ch == '\r') {
       if (string_has_header(lineBuffer, header)) {
@@ -104,10 +108,10 @@ static int string_has_header(const char * str, const char * header) {
 
 static ssize_t substr_index(const char * haystack, size_t len, const char * needle) {
   size_t needleLen = strlen(needle);
-  return index_of_string_before(haystack, len, needle, (ssize_t)(haystackLen-needleLen));
+  return substr_index_before(haystack, len, needle, (ssize_t)(len-needleLen));
 }
 
-static ssize_t index_of_string_before(const char * haystack, size_t len, const char * needle,
+static ssize_t substr_index_before(const char * haystack, size_t len, const char * needle,
                                       ssize_t start) {
   size_t needleLen = strlen(needle);
   for (ssize_t i = start; i >= 0; --i) {

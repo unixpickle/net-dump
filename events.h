@@ -1,7 +1,7 @@
 #include "http_req.h"
 #include <pcap.h>
 
-typedef char[6] hardware_address;
+typedef char hardware_address[6];
 
 typedef enum {
   CLIENT_EVENT_TO_AP,
