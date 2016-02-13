@@ -46,8 +46,8 @@ http_req * http_req_in_packet(const void * packet, size_t len) {
   req->path[pathLen] = 0;
   memcpy(req->path, packetStr+pathStartIndex, pathLen);
 
-  req->host = find_http_header(packetStr, len-httpIndex, "host");
-  req->user_agent = find_http_header(packetStr, len-httpIndex, "user-agent");
+  req->host = find_http_header(packetStr+httpIndex, len-httpIndex, "host");
+  req->user_agent = find_http_header(packetStr+httpIndex, len-httpIndex, "user-agent");
 
   return req;
 }
