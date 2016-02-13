@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <pcap.h>
 
+#include "channel.h"
+#include "events.h"
+
+const int CHANNEL_HOP_SECONDS = 5;
+
 static int get_channel_list(int argc, const char ** argv, int * channels);
 
 int main(int argc, const char ** argv) {
@@ -27,8 +32,14 @@ int main(int argc, const char ** argv) {
     fprintf(stderr, "invalid channel list.\n");
     return 1;
   }
+  channel_hop_info * hopInfo = (channel_hop_info *)malloc(sizeof(channel_hop_info));
+  hopInfo->channels = channels;
+  hopInfo->count = argc - 2;
+  hopInfo->interface = argv[1];
+  hopInfo->hopDelay = CHANNEL_HOP_SECONDS;
+  hop_channels_async(hopInfo);
 
-  free(channels);
+  // TODO: log events here.
 }
 
 static int get_channel_list(int argc, const char ** argv, int * channels) {
