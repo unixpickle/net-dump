@@ -139,7 +139,7 @@ static int radiotap_rssi(const u_char * packet) {
         fieldOffset += 2;
     }
 
-    return (int)((char *)packet)[8+fieldOffset];
+    return (int)((signed char *)packet)[8+fieldOffset];
 }
 
 static void print_hardware_address(hardware_address a) {
