@@ -51,7 +51,8 @@ int main(int argc, const char ** argv) {
 }
 
 static int get_channel_list(int argc, const char ** argv, int * channels) {
-  for (int i = 2; i < argc; i++) {
+  int i;
+  for (i = 2; i < argc; i++) {
     channels[i-2] = atoi(argv[i]);
     if (!channels[i-2]) {
       return -1;

@@ -36,4 +36,5 @@ static void * hop_thread(void * info) {
     idx = (idx + 1) % hopInfo->count;
     sleep(hopInfo->hopDelay);
   }
+  return NULL;
 }

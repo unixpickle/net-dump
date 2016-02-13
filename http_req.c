@@ -20,7 +20,8 @@ http_req * http_req_in_packet(const void * packet, size_t len) {
   char * reqMethod = NULL;
   char * reqMethods[] = {"POST", "GET", "PUT", "HEAD"};
   ssize_t pathStartIndex = -1;
-  for (size_t i = 0; i < sizeof(reqMethods)/sizeof(char *); ++i) {
+  size_t i;
+  for (i = 0; i < sizeof(reqMethods)/sizeof(char *); ++i) {
     pathStartIndex = substr_index_before(packetStr, len, reqMethods[i], httpIndex);
     if (pathStartIndex >= 0) {
       reqMethod = reqMethods[i];
@@ -66,7 +67,8 @@ static char * find_http_header(const char * packet, size_t len, const char * hea
   char * lineBuffer = (char *)malloc(len+1);
   bzero(lineBuffer, len+1);
 
-  for (size_t i = 0; i < len+1; i++) {
+  size_t i;
+  for (i = 0; i < len+1; i++) {
     char ch = 0;
     if (i < len) {
       ch = packet[i];
@@ -95,7 +97,8 @@ static int string_has_header(const char * str, const char * header) {
   if (len1 < len2+2) {
     return 0;
   }
-  for (size_t i = 0; i < len2; i++) {
+  size_t i;
+  for (i = 0; i < len2; i++) {
     if (tolower(str[i]) != tolower(header[i])) {
       return 0;
     }
@@ -114,7 +117,8 @@ static ssize_t substr_index(const char * haystack, size_t len, const char * need
 static ssize_t substr_index_before(const char * haystack, size_t len, const char * needle,
                                       ssize_t start) {
   size_t needleLen = strlen(needle);
-  for (ssize_t i = start; i >= 0; --i) {
+  ssize_t i;
+  for (i = start; i >= 0; --i) {
     if (memcmp(haystack+i, needle, needleLen) == 0) {
       return i;
     }
