@@ -3,6 +3,7 @@
 #include <pcap.h>
 
 #include "channel.h"
+#include "die.h"
 #include "events.h"
 
 const int CHANNEL_HOP_SECONDS = 5;
@@ -39,7 +40,14 @@ int main(int argc, const char ** argv) {
   hopInfo->hopDelay = CHANNEL_HOP_SECONDS;
   hop_channels_async(hopInfo);
 
-  // TODO: log events here.
+  while (1) {
+    client_event * e = client_event_read(pcapHandle);
+    if (e == NULL) {
+      die("failed to read next event.");
+    }
+    client_event_log_csv(e);
+    client_event_free(e);
+  }
 }
 
 static int get_channel_list(int argc, const char ** argv, int * channels) {

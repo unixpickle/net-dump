@@ -46,7 +46,7 @@ http_req * http_req_in_packet(const void * packet, size_t len) {
   memcpy(req->path, packetStr+pathStartIndex, pathLen);
 
   req->host = find_http_header(packetStr, len-httpIndex, "host");
-  req->userAgent = find_http_header(packetStr, len-httpIndex, "user-agent");
+  req->user_agent = find_http_header(packetStr, len-httpIndex, "user-agent");
 
   return req;
 }
@@ -56,8 +56,8 @@ void http_req_free(http_req * r) {
   if (r->host != NULL) {
     free(r->host);
   }
-  if (r->userAgent != NULL) {
-    free(r->userAgent);
+  if (r->user_agent != NULL) {
+    free(r->user_agent);
   }
   free(r);
 }

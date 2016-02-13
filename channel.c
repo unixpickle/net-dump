@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "channel.h"
+#include "die.h"
 
 static void * hop_thread(void * info);
 
@@ -30,8 +31,7 @@ static void * hop_thread(void * info) {
   while (1) {
     int channel = hopInfo->channels[idx];
     if (switch_channel(hopInfo->interface, channel)) {
-      fprintf(stderr, "failed to hop channels.\n");
-      exit(1);
+      die("failed to hop channels.");
     }
     idx = (idx + 1) % hopInfo->count;
     sleep(hopInfo->hopDelay);

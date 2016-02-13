@@ -4,7 +4,7 @@ typedef struct {
   char method[5];
   char * path;
   char * host;
-  char * userAgent;
+  char * user_agent;
 } http_req;
 
 // http_req_in_packet reads a packet and sees if it is likely to contain an HTTP request.

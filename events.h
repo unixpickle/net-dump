@@ -25,5 +25,8 @@ typedef struct {
 // It returns NULL if a packet cannot be read.
 client_event * client_event_read(pcap_t * handle);
 
+// client_event_log_csv prints the CSV representation of a client_event to stdout.
+void client_event_log_csv(client_event * e);
+
 // client_event_free deallocates a client_event from client_event_read().
 void client_event_free(client_event * e);
