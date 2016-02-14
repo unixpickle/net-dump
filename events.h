@@ -1,4 +1,4 @@
-#include "http_req.h"
+#include "http.h"
 #include <pcap.h>
 
 typedef char hardware_address[6];
@@ -18,6 +18,7 @@ typedef struct {
   hardware_address accessPoint;
 
   http_req * request_info;
+  http_resp * response_info;
 } client_event;
 
 // read_next_event reads packets from the pcap handle until it finds a client event.

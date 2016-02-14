@@ -36,6 +36,7 @@ client_event * client_event_read(pcap_t * handle) {
     res->timestamp = header->ts;
     res->rssi = radiotap_rssi(buffer);
     res->request_info = http_req_in_packet(macPacket, macPacketLen);
+    res->response_info = http_resp_in_packet(macPacket, macPacketLen);
     return res;
   }
 }
@@ -66,9 +67,21 @@ void client_event_log_csv(client_event * e) {
     print_csv_escaped(e->request_info->host);
     printf(",");
     print_csv_escaped(e->request_info->user_agent);
+  } else {
+    printf(",,,");
+  }
+  if (e->response_info != NULL) {
+    printf(",");
+    int headerIdx;
+    for (headerIdx = 0; headerIdx < e->response_info->header_count; ++headerIdx) {
+      print_csv_escaped(e->response_info->header_names[headerIdx]);
+      printf(": ");
+      print_csv_escaped(e->response_info->header_values[headerIdx]);
+      printf("\\n");
+    }
     printf("\n");
   } else {
-    printf(",,,\n");
+    printf(",\n");
   }
   fflush(stdout);
 }
@@ -76,6 +89,9 @@ void client_event_log_csv(client_event * e) {
 void client_event_free(client_event * e) {
   if (e->request_info != NULL) {
     http_req_free(e->request_info);
+  }
+  if (e->response_info != NULL) {
+    http_resp_free(e->response_info);
   }
   free(e);
 }
@@ -155,6 +171,8 @@ static void print_csv_escaped(const char * str) {
   for (i = 0; i < len; ++i) {
     if (str[i] == '\\' || str[i] == ',') {
       printf("\\%c", str[i]);
+    } else if (str[i] == '\n') {
+      printf("\\n");
     } else {
       putc(str[i], stdout);
     }
