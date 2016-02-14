@@ -16,6 +16,12 @@ int main(int argc, const char ** argv) {
     return 1;
   }
 
+#ifdef __APPLE__
+  // On OS X, we must explicitly disassociate from WiFi before sniffing packets.
+  system("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/"
+    "Resources/airport -z");
+#endif
+
   char errBuff[PCAP_ERRBUF_SIZE];
   pcap_t * pcapHandle = pcap_open_live(argv[1], 65536, 1, 100, errBuff);
   if (pcapHandle == NULL) {

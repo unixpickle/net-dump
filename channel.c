@@ -14,9 +14,16 @@ int switch_channel(const char * interface, int channel) {
     return -1;
   }
 
+#ifdef __APPLE__
+  char command[128];
+  snprintf(command, sizeof(command), "/System/Library/PrivateFrameworks/Apple80211.framework/"
+    "Versions/Current/Resources/airport -c%d", channel);
+#else
   // TODO: look into using libiw here.
   char command[64];
   snprintf(command, sizeof(command), "iwconfig %s channel %d", interface, channel);
+#endif
+
   return system(command);
 }
 
