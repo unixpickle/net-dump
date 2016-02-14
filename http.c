@@ -90,6 +90,7 @@ http_resp * http_resp_in_packet(const void * packet, size_t len) {
     if (line == NULL) {
       break;
     }
+    fieldIndex += strlen(line)+2;
     ssize_t colon = substr_index(line, strlen(line), ": ");
     if (colon < 0) {
       free(line);

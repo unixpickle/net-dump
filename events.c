@@ -74,10 +74,12 @@ void client_event_log_csv(client_event * e) {
     printf(",");
     int headerIdx;
     for (headerIdx = 0; headerIdx < e->response_info->header_count; ++headerIdx) {
+      if (headerIdx != 0) {
+        printf("\\n");
+      }
       print_csv_escaped(e->response_info->header_names[headerIdx]);
       printf(": ");
       print_csv_escaped(e->response_info->header_values[headerIdx]);
-      printf("\\n");
     }
     printf("\n");
   } else {
