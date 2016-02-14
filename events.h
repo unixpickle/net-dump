@@ -14,6 +14,7 @@ typedef struct {
 
   struct timeval   timestamp;
   int              rssi;
+  size_t           data_size;
   hardware_address client;
   hardware_address accessPoint;
 

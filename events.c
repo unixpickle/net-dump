@@ -33,6 +33,7 @@ client_event * client_event_read(pcap_t * handle) {
     }
 
     client_event * res = read_mac_info(macPacket, macPacketLen);
+    res->data_size = macPacketLen;
     res->timestamp = header->ts;
     res->rssi = radiotap_rssi(buffer);
     res->request_info = http_req_in_packet(macPacket, macPacketLen);
@@ -56,7 +57,7 @@ void client_event_log_csv(client_event * e) {
     printf("unknown_type");
     break;
   }
-  printf(",%llu,%d,", (unsigned long long)e->timestamp.tv_sec, e->rssi);
+  printf(",%llu,%d,%d,", (unsigned long long)e->timestamp.tv_sec, e->rssi, (int)e->data_size);
   print_hardware_address(e->client);
   printf(",");
   print_hardware_address(e->accessPoint);
