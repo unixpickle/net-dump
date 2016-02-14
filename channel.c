@@ -21,7 +21,12 @@ int switch_channel(const char * interface, int channel) {
 #else
   // TODO: look into using libiw here.
   char command[64];
-  snprintf(command, sizeof(command), "iwconfig %s channel %d", interface, channel);
+  const char * useIW = getenv("USE_IW");
+  if (useIW != NULL && strcmp(useIW, "1") == 0) {
+    snprintf(command, sizeof(command), "iw dev %s set channel %d", interface, channel);
+  } else {
+    snprintf(command, sizeof(command), "iwconfig %s channel %d", interface, channel);
+  }
 #endif
 
   return system(command);

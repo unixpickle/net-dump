@@ -24,3 +24,6 @@ The first argument is the wireless interface. You can find a list of wireless in
 Some Linux processes (e.g. Network Manager) will keep messing with your wireless card's settings. If you have problems, I recommend installing `airmon-ng`.
 
 The channel arguments are numerical WLAN channel numbers. You need to specify at least one channel to sniff on. For 2.4GHz, you will probably use numbers between 1 and 11. For 5GHz, the channel numbers are more spread out.
+
+On some Linux distributions, the `iw` command is the only way to set the channel of a wireless interface, and `iwconfig` does not work. On these distributions, you may set the envirovnment variable `USE_IW` to `1` to instruct net-dump to use the `iw` command for channel hopping.
+
