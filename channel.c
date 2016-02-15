@@ -9,23 +9,30 @@
 
 static void * hop_thread(void * info);
 
-int switch_channel(const char * interface, int channel) {
-  if (strlen(interface) > 16 || channel <= 0 || channel > 999) {
+int switch_channel(const char * interface, const char * channel) {
+  if (strlen(interface) > 16 || strlen(channel) > 9) {
     return -1;
   }
 
 #ifdef __APPLE__
+  if (atoi(channel) == 0) {
+    return -1;
+  }
   char command[128];
   snprintf(command, sizeof(command), "/System/Library/PrivateFrameworks/Apple80211.framework/"
-    "Versions/Current/Resources/airport -c%d", channel);
+    "Versions/Current/Resources/airport -c%s", channel);
 #else
   // TODO: look into using libiw here.
   char command[64];
   const char * useIW = getenv("USE_IW");
   if (useIW != NULL && strcmp(useIW, "1") == 0) {
-    snprintf(command, sizeof(command), "iw dev %s set channel %d", interface, channel);
+    // TODO: validate that the channel string is formatted correctly.
+    snprintf(command, sizeof(command), "iw dev %s set channel %s", interface, channel);
   } else {
-    snprintf(command, sizeof(command), "iwconfig %s channel %d", interface, channel);
+    if (atoi(channel) == 0) {
+      return -1;
+    }
+    snprintf(command, sizeof(command), "iwconfig %s channel %s", interface, channel);
   }
 #endif
 
@@ -41,7 +48,7 @@ static void * hop_thread(void * info) {
   const channel_hop_info * hopInfo = (const channel_hop_info *)info;
   int idx = 0;
   while (1) {
-    int channel = hopInfo->channels[idx];
+    const char * channel = hopInfo->channels[idx];
     if (switch_channel(hopInfo->interface, channel)) {
       die("failed to hop channels.");
     }

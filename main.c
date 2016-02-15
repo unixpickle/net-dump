@@ -9,8 +9,6 @@
 
 const int DEFAULT_HOP_INTERVAL = 5;
 
-static int get_channel_list(const char ** strList, int count, int * channels);
-
 int main(int argc, const char ** argv) {
   if (argc < 3) {
     fprintf(stderr, "Usage: %s <interface> [-h hop_interval] <channel> [channel ...]\n", argv[0]);
@@ -48,14 +46,9 @@ int main(int argc, const char ** argv) {
     return 1;
   }
 
-  int * channels = (int *)malloc(sizeof(int)*(argc-channelsStartIndex));
-  if (get_channel_list(argv+channelsStartIndex, argc-channelsStartIndex, channels) < 0) {
-    fprintf(stderr, "invalid channel list.\n");
-    return 1;
-  }
   channel_hop_info * hopInfo = (channel_hop_info *)malloc(sizeof(channel_hop_info));
-  hopInfo->channels = channels;
-  hopInfo->count = argc - 2;
+  hopInfo->channels = argv + channelsStartIndex;
+  hopInfo->count = argc - channelsStartIndex;
   hopInfo->interface = argv[1];
   hopInfo->hopDelay = hopInterval;
   hop_channels_async(hopInfo);
@@ -68,15 +61,4 @@ int main(int argc, const char ** argv) {
     client_event_log_csv(e);
     client_event_free(e);
   }
-}
-
-static int get_channel_list(const char ** strList, int count, int * channels) {
-  int i;
-  for (i = 0; i < count; i++) {
-    channels[i] = atoi(strList[i]);
-    if (!channels[i]) {
-      return -1;
-    }
-  }
-  return 0;
 }

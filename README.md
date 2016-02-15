@@ -25,6 +25,6 @@ Some Linux processes (e.g. Network Manager) will keep messing with your wireless
 
 The optional hop_interval argument specifies how frequently net-dump should switch channels. This is an integer representing a number of seconds. By default, the hop interval is set to 5 seconds, meaning that net-dump switches channels every five seconds.
 
-The channel arguments are numerical WLAN channel numbers. You need to specify at least one channel to sniff on. For 2.4GHz, you will probably use numbers between 1 and 11. For 5GHz, the channel numbers are more spread out.
+The channel arguments are numerical WLAN channel numbers (except for when you are using `iw`, as described in the next paragraph). You need to specify at least one channel to sniff on. For 2.4GHz, you will probably use numbers between 1 and 11. For 5GHz, the channel numbers are more spread out.
 
-On some Linux distributions, the `iw` command is the only way to set the channel of a wireless interface, and `iwconfig` does not work. On these distributions, you may set the envirovnment variable `USE_IW` to `1` to instruct net-dump to use the `iw` command for channel hopping.
+On some Linux distributions, the `iw` command is the only way to set the channel of a wireless interface, and `iwconfig` does not work. On these distributions, you may set the environment variable `USE_IW` to `1` to instruct net-dump to use the `iw` command for channel hopping. If you use `iw`, then channels may be of the form `x HTy`, where x is a channel number and y is `20`, `40+`, or `40-`, indicating the channel width. These channel strings are passed directly to the `iw` command.
