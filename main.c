@@ -1,19 +1,33 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <pcap.h>
 
 #include "channel.h"
 #include "die.h"
 #include "events.h"
 
-const int CHANNEL_HOP_SECONDS = 5;
+const int DEFAULT_HOP_INTERVAL = 5;
 
-static int get_channel_list(int argc, const char ** argv, int * channels);
+static int get_channel_list(const char ** strList, int count, int * channels);
 
 int main(int argc, const char ** argv) {
   if (argc < 3) {
-    fprintf(stderr, "Usage: %s <interface> <channel> [channel ...]\n", argv[0]);
+    fprintf(stderr, "Usage: %s <interface> [-h hop_interval] <channel> [channel ...]\n", argv[0]);
     return 1;
+  }
+
+  int channelsStartIndex = 2;
+  int hopInterval = DEFAULT_HOP_INTERVAL;
+  if (argc >= 5) {
+    if (strcmp(argv[2], "-h") == 0) {
+      hopInterval = atoi(argv[3]);
+      if (hopInterval == 0) {
+        fprintf(stderr, "Invalid hop interval: %s\n", argv[3]);
+        return 1;
+      }
+      channelsStartIndex = 4;
+    }
   }
 
 #ifdef __APPLE__
@@ -34,8 +48,8 @@ int main(int argc, const char ** argv) {
     return 1;
   }
 
-  int * channels = (int *)malloc(sizeof(int)*(argc-2));
-  if (get_channel_list(argc, argv, channels) < 0) {
+  int * channels = (int *)malloc(sizeof(int)*(argc-channelsStartIndex));
+  if (get_channel_list(argv+channelsStartIndex, argc-channelsStartIndex, channels) < 0) {
     fprintf(stderr, "invalid channel list.\n");
     return 1;
   }
@@ -43,7 +57,7 @@ int main(int argc, const char ** argv) {
   hopInfo->channels = channels;
   hopInfo->count = argc - 2;
   hopInfo->interface = argv[1];
-  hopInfo->hopDelay = CHANNEL_HOP_SECONDS;
+  hopInfo->hopDelay = hopInterval;
   hop_channels_async(hopInfo);
 
   while (1) {
@@ -56,11 +70,11 @@ int main(int argc, const char ** argv) {
   }
 }
 
-static int get_channel_list(int argc, const char ** argv, int * channels) {
+static int get_channel_list(const char ** strList, int count, int * channels) {
   int i;
-  for (i = 2; i < argc; i++) {
-    channels[i-2] = atoi(argv[i]);
-    if (!channels[i-2]) {
+  for (i = 0; i < count; i++) {
+    channels[i] = atoi(strList[i]);
+    if (!channels[i]) {
       return -1;
     }
   }

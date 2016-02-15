@@ -13,7 +13,7 @@ First, you must compile net-dump. Make sure that you have libpcap installed, and
 Now you should be able to execute the command:
 
     $ ./build/net-dump
-    Usage: ./build/net-dump <interface> <channel> [channel ...]
+    Usage: ./build/net-dump <interface> [-h hop_interval] <channel> [channel ...]
 
 The first argument is the wireless interface. You can find a list of wireless interfaces on Linux using `iwconfig`. On OS X, it will be listed in the output of `ifconfig`. If you are on Linux, you will need to explicitly place your wireless card in monitor mode before using net-dump:
 
@@ -23,7 +23,8 @@ The first argument is the wireless interface. You can find a list of wireless in
 
 Some Linux processes (e.g. Network Manager) will keep messing with your wireless card's settings. If you have problems, I recommend installing `airmon-ng`.
 
+The optional hop_interval argument specifies how frequently net-dump should switch channels. This is an integer representing a number of seconds. By default, the hop interval is set to 5 seconds, meaning that net-dump switches channels every five seconds.
+
 The channel arguments are numerical WLAN channel numbers. You need to specify at least one channel to sniff on. For 2.4GHz, you will probably use numbers between 1 and 11. For 5GHz, the channel numbers are more spread out.
 
 On some Linux distributions, the `iw` command is the only way to set the channel of a wireless interface, and `iwconfig` does not work. On these distributions, you may set the envirovnment variable `USE_IW` to `1` to instruct net-dump to use the `iw` command for channel hopping.
-
