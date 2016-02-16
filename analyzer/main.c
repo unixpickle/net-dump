@@ -2,6 +2,7 @@
 #include <string.h>
 #include "clients.h"
 #include "db_entry.h"
+#include "hosts.h"
 
 static void print_usage();
 
@@ -26,6 +27,8 @@ int main(int argc, const char ** argv) {
   const char * cmd = argv[1];
   if (strcmp(cmd, "clients") == 0) {
     clients_command(argc-3, argv+2, database);
+  } else if (strcmp(cmd, "hosts") == 0) {
+    hosts_command(argc-3, argv+2, database);
   } else {
     fprintf(stderr, "unknown command: %s\n", cmd);
     return 1;
@@ -35,5 +38,6 @@ int main(int argc, const char ** argv) {
 static void print_usage(const char ** argv) {
   fprintf(stderr, "Usage: %s <command> [flags] <file.csv>\n"
     "Available commands are:\n"
-    " clients       view all of the client MAC addresses\n", argv[0]);
+    " clients       list client MAC addresses\n"
+    " hosts         list HTTP/1.1 Host header values\n", argv[0]);
 }
