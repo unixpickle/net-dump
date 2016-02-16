@@ -33,6 +33,8 @@ int main(int argc, const char ** argv) {
     fprintf(stderr, "unknown command: %s\n", cmd);
     return 1;
   }
+
+  return 0;
 }
 
 static void print_usage(const char ** argv) {
