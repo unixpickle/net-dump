@@ -4,7 +4,7 @@
 
 static int read_line(FILE * f, char ** out);
 static int count_commas(const char * str);
-static void null_out_commas(char * str);
+static int null_out_commas(char * str);
 
 db * db_read(FILE * f) {
   db * database = (db *)malloc(sizeof(db));
@@ -19,6 +19,14 @@ db * db_read(FILE * f) {
       return NULL;
     }
 
+    if (strlen(line) == 0) {
+      if (res == EOF) {
+        break;
+      } else {
+        continue;
+      }
+    }
+
     int commaCount = count_commas(line);
     if (commaCount != 9) {
       free(line);
@@ -26,7 +34,11 @@ db * db_read(FILE * f) {
       return NULL;
     }
 
-    null_out_commas(line);
+    if (null_out_commas(line) < 0) {
+      free(line);
+      db_free(database);
+      return NULL;
+    }
 
     database->entries = realloc(database->entries, sizeof(db_entry)*(database->count+1));
     db_entry * entry = database->entries + database->count;
@@ -114,17 +126,28 @@ static int read_line(FILE * f, char ** out) {
 static int count_commas(const char * str) {
   int count = 0;
   for (; *str; ++str) {
-    if ((*str) == ',') {
+    if ((*str) == '\\') {
+      ++str;
+      if (!(*str)) {
+        return -1;
+      }
+    } else if ((*str) == ',') {
       ++count;
     }
   }
   return count;
 }
 
-static void null_out_commas(char * str) {
+static int null_out_commas(char * str) {
   for (; *str; ++str) {
-    if ((*str) == ',') {
+    if ((*str) == '\\') {
+      ++str;
+      if (!(*str)) {
+        return -1;
+      }
+    } else if ((*str) == ',') {
       (*str) = 0;
     }
   }
+  return 0;
 }

@@ -1,3 +1,6 @@
+#ifndef __DB_ENTRY_H__
+#define __DB_ENTRY_H__
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -29,3 +32,5 @@ db * db_read(FILE * f);
 
 // db_free deallocates the result from db_read().
 void db_free(db * d);
+
+#endif
