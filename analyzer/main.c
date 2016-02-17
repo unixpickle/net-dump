@@ -3,6 +3,7 @@
 #include "clients.h"
 #include "db_entry.h"
 #include "hosts.h"
+#include "usage.h"
 
 static void print_usage();
 
@@ -29,6 +30,8 @@ int main(int argc, const char ** argv) {
     clients_command(argc-3, argv+2, database);
   } else if (strcmp(cmd, "hosts") == 0) {
     hosts_command(argc-3, argv+2, database);
+  } else if (strcmp(cmd, "usage") == 0) {
+    usage_command(argc-3, argv+2, database);
   } else {
     fprintf(stderr, "unknown command: %s\n", cmd);
     return 1;
@@ -41,5 +44,6 @@ static void print_usage(const char ** argv) {
   fprintf(stderr, "Usage: %s <command> [flags] <file.csv>\n"
     "Available commands are:\n"
     " clients       list client MAC addresses\n"
-    " hosts         list HTTP/1.1 Host header values\n", argv[0]);
+    " hosts         list HTTP/1.1 Host header values\n"
+    " usage         graph data usage over time\n", argv[0]);
 }

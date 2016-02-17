@@ -6,7 +6,7 @@
 #endif
 
 #ifndef DEFAULT_GRAPH_HEIGHT
-#define DEFAULT_GRAPH_HEIGHT 20
+#define DEFAULT_GRAPH_HEIGHT 10
 #endif
 
 void print_graph(double * values, int pointCount);
