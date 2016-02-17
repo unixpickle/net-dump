@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static int compare_entry_count(const void * e1, const void * e2);
+
 string_counter * string_counter_alloc() {
   string_counter * res = (string_counter *)malloc(sizeof(string_counter));
   res->entries = (string_counter_entry *)malloc(1);
@@ -9,8 +11,6 @@ string_counter * string_counter_alloc() {
   return res;
 }
 
-// string_counter_add updates the number for the given string by adding `count` to it.
-// This will create an entry for the string if one does not already exist.
 void string_counter_add(string_counter * c, const char * str, unsigned long long count) {
   string_counter_entry * entry = NULL;
 
@@ -37,26 +37,23 @@ void string_counter_add(string_counter * c, const char * str, unsigned long long
   entry->count += (unsigned long long)count;
 }
 
-// string_counter_sort sorts the entries in the counter in descending order.
 void string_counter_sort(string_counter * c) {
-  // TODO: use qsort() here.
-  int keepLooping = 1;
-  while (keepLooping) {
-    keepLooping = 0;
-    int i;
-    for (i = 0; i < c->count-1; i++) {
-      string_counter_entry e1 = c->entries[i];
-      string_counter_entry e2 = c->entries[i+1];
-      if (e2.count > e1.count) {
-        keepLooping = 1;
-        c->entries[i+1] = e1;
-        c->entries[i] = e2;
-      }
-    }
-  }
+  qsort(c->entries, c->count, sizeof(string_counter_entry), compare_entry_count);
 }
 
 void string_counter_free(string_counter * c) {
   free(c->entries);
   free(c);
+}
+
+static int compare_entry_count(const void * e1, const void * e2) {
+  string_counter_entry * entry1 = (string_counter_entry *)e1;
+  string_counter_entry * entry2 = (string_counter_entry *)e2;
+  if (entry1->count < entry2->count) {
+    return 1;
+  } else if (entry1->count > entry2->count) {
+    return -1;
+  } else {
+    return 0;
+  }
 }
