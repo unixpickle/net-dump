@@ -4,7 +4,7 @@ build/:
 	mkdir build
 
 build/analyzer: build/
-	gcc -Wall analyzer/*.c -o build/analyzer
+	gcc -Wall analyzer/*.c -o build/analyzer -lm
 
 build/net-dump: build/
 	gcc -Wall -lpcap -lpthread *.c -o build/net-dump
