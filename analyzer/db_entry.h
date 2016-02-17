@@ -30,6 +30,9 @@ typedef struct {
 // If this returns a non-NULL pointer, you must free it with db_free().
 db * db_read(FILE * f);
 
+// db_sort sorts a database chronologically.
+void db_sort(db * database);
+
 // db_free deallocates the result from db_read().
 void db_free(db * d);
 

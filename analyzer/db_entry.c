@@ -5,6 +5,7 @@
 static int read_line(FILE * f, char ** out);
 static int count_commas(const char * str);
 static int null_out_commas(char * str);
+static int compare_entries_time(const void * ptr1, const void * ptr2);
 
 db * db_read(FILE * f) {
   int capacity = 16;
@@ -89,6 +90,10 @@ db * db_read(FILE * f) {
   return database;
 }
 
+void db_sort(db * database) {
+  qsort((void *)database->entries, database->count, sizeof(db_entry), compare_entries_time);
+}
+
 void db_free(db * database) {
   int i;
   for (i = 0; i < database->count; ++i) {
@@ -161,4 +166,16 @@ static int null_out_commas(char * str) {
     }
   }
   return 0;
+}
+
+static int compare_entries_time(const void * e1, const void * e2) {
+  db_entry * entry1 = (db_entry *)e1;
+  db_entry * entry2 = (db_entry *)e2;
+  if (entry1->timestamp < entry2->timestamp) {
+    return -1;
+  } else if (entry1->timestamp > entry2->timestamp) {
+    return 1;
+  } else {
+    return 0;
+  }
 }

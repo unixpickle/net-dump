@@ -7,7 +7,7 @@ void usage_command(int argc, const char ** argv, db * database) {
     return;
   }
 
-  // TODO: sort the database chronologically, since the rest of this code depends on it.
+  db_sort(database);
 
   int bufferSize = 16;
   int valueCount = 0;
