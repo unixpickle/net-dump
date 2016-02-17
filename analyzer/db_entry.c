@@ -7,9 +7,10 @@ static int count_commas(const char * str);
 static int null_out_commas(char * str);
 
 db * db_read(FILE * f) {
+  int capacity = 16;
   db * database = (db *)malloc(sizeof(db));
   database->count = 0;
-  database->entries = (db_entry *)malloc(1);
+  database->entries = (db_entry *)malloc(capacity * sizeof(db_entry));
 
   while (1) {
     char * line;
@@ -20,6 +21,7 @@ db * db_read(FILE * f) {
     }
 
     if (strlen(line) == 0) {
+      free(line);
       if (res == EOF) {
         break;
       } else {
@@ -40,7 +42,10 @@ db * db_read(FILE * f) {
       return NULL;
     }
 
-    database->entries = realloc(database->entries, sizeof(db_entry)*(database->count+1));
+    if (database->count == capacity) {
+      capacity *= 2;
+      database->entries = realloc(database->entries, sizeof(db_entry)*capacity);
+    }
     db_entry * entry = database->entries + database->count;
     ++database->count;
 
@@ -97,29 +102,35 @@ void db_free(db * database) {
 
 static int read_line(FILE * f, char ** out) {
   int len = 0;
-  char * res = malloc(1);
+  int capacity = 80;
+  char * res = malloc(capacity);
   res[0] = 0;
 
   while (1) {
-    int ch = fgetc(f);
-    if (ch == EOF) {
-      if (ferror(f)) {
-        free(res);
-        return 1;
-      } else {
+    if (fgets(res+len, capacity-len, f) == NULL) {
+      if (feof(f)) {
         (*out) = res;
         return EOF;
+      } else {
+        free(res);
+        return 1;
       }
     }
 
-    if (ch == '\n') {
+    if (feof(f)) {
+      (*out) = res;
+      return EOF;
+    }
+
+    len += strlen(res+len);
+    if (res[len-1] == '\n') {
+      res[--len] = 0;
       (*out) = res;
       return 0;
     }
 
-    res = realloc(res, len+2);
-    res[len++] = (char)ch;
-    res[len] = 0;
+    capacity += 20;
+    res = realloc(res, capacity);
   }
 }
 
