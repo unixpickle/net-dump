@@ -6,10 +6,24 @@
 static char * find_cookie_domain(char * headers);
 
 void hosts_command_help() {
-  printf("No arguments for `hosts`.\n");
+  printf("Available flags:\n\n"
+    " -r            only extract hosts from requests, not responses.\n\n");
 }
 
 void hosts_command(int argc, const char ** argv, db * database) {
+  int useCookies = 1;
+  if (argc > 0) {
+    if (argc != 1) {
+      fprintf(stderr, "invalid arguments.\n");
+      return;
+    }
+    if (strcmp(argv[0], "-r") != 0) {
+      fprintf(stderr, "invalid arguments.\n");
+      return;
+    }
+    useCookies = 0;
+  }
+
   string_counter * counter = string_counter_alloc();
 
   int i;
@@ -18,9 +32,11 @@ void hosts_command(int argc, const char ** argv, db * database) {
     if (entry.request_host[0] != 0) {
       string_counter_add(counter, entry.request_host, 1);
     }
-    char * cookieDomain = find_cookie_domain(entry.response_headers);
-    if (cookieDomain != NULL) {
-      string_counter_add(counter, cookieDomain, 1);
+    if (useCookies) {
+      char * cookieDomain = find_cookie_domain(entry.response_headers);
+      if (cookieDomain != NULL) {
+        string_counter_add(counter, cookieDomain, 1);
+      }
     }
   }
 
@@ -37,7 +53,7 @@ void hosts_command(int argc, const char ** argv, db * database) {
       printf(" ");
     }
 
-    printf("%llu requests\n", entry.count);
+    printf("%llu occurrences\n", entry.count);
   }
 
   string_counter_free(counter);
