@@ -2,6 +2,10 @@
 #include "string_counter.h"
 #include <stdio.h>
 
+void clients_command_help() {
+  printf("No arguments for `clients`.\n");
+}
+
 void clients_command(int argc, const char ** argv, db * database) {
   string_counter * counter = string_counter_alloc();
 

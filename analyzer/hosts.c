@@ -5,6 +5,10 @@
 
 static char * find_cookie_domain(char * headers);
 
+void hosts_command_help() {
+  printf("No arguments for `hosts`.\n");
+}
+
 void hosts_command(int argc, const char ** argv, db * database) {
   string_counter * counter = string_counter_alloc();
 

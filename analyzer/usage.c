@@ -1,6 +1,10 @@
 #include "usage.h"
 #include "graph.h"
 
+void usage_command_help() {
+  printf("No arguments for `usage`.\n");
+}
+
 void usage_command(int argc, const char ** argv, db * database) {
   if (database->count == 0) {
     printf("Nothing to graph.\n");
