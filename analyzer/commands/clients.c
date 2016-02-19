@@ -1,5 +1,5 @@
 #include "clients.h"
-#include "string_counter.h"
+#include "../string_counter.h"
 #include <stdio.h>
 
 void clients_command_help() {

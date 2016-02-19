@@ -1,5 +1,5 @@
 #include "usage.h"
-#include "graph.h"
+#include "../graph.h"
 
 void usage_command_help() {
   printf("No arguments for `usage`.\n");
