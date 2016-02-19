@@ -55,8 +55,8 @@ db * db_read(FILE * f) {
     entry->type = line;
     line += strlen(line) + 1;
 
-    entry->timestamp = strtoull(line, NULL, 10);
     errno = 0;
+    entry->timestamp = strtoull(line, NULL, 10);
     if (errno || entry->timestamp == 0) {
       db_free(database);
       return NULL;
