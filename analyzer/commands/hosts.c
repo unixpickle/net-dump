@@ -1,4 +1,5 @@
 #include "clients.h"
+#include "../flags.h"
 #include "../string_counter.h"
 #include <stdio.h>
 #include <string.h>
@@ -11,18 +12,12 @@ void hosts_command_help() {
 }
 
 void hosts_command(int argc, const char ** argv, db * database) {
-  int useCookies = 1;
-  if (argc > 0) {
-    if (argc != 1) {
-      fprintf(stderr, "invalid arguments.\n");
-      return;
-    }
-    if (strcmp(argv[0], "-r") != 0) {
-      fprintf(stderr, "invalid arguments.\n");
-      return;
-    }
-    useCookies = 0;
+  cmd_flags * flags = cmd_flags_parse("-r bool", argc, argv);
+  if (flags == NULL) {
+    return;
   }
+  int useCookies = 1 - cmd_flags_get_int(flags, "-r", 0);
+  cmd_flags_free(flags);
 
   string_counter * counter = string_counter_alloc();
 
