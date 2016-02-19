@@ -14,9 +14,10 @@ cmd_flags * cmd_flags_parse(const char * options, int argc, const char ** argv) 
 
   int i;
   for (i = 0; i < argc; ++i) {
-    const char * type = flag_type(options, argv[i]);
+    const char * flagName = argv[i];
+    const char * type = flag_type(options, flagName);
     if (type == NULL) {
-      fprintf(stderr, "unknown flag: %s\n", argv[i]);
+      fprintf(stderr, "unknown flag: %s\n", flagName);
       cmd_flags_free(res);
       return NULL;
     }
@@ -24,7 +25,7 @@ cmd_flags * cmd_flags_parse(const char * options, int argc, const char ** argv) 
     if (strcmp(type, "bool") != 0) {
       ++i;
       if (i == argc) {
-        fprintf(stderr, "missing parameter for %s flag.\n", argv[i-1]);
+        fprintf(stderr, "missing parameter for %s flag.\n", flagName);
         cmd_flags_free(res);
         return NULL;
       }
@@ -33,6 +34,8 @@ cmd_flags * cmd_flags_parse(const char * options, int argc, const char ** argv) 
     res->flags = (cmd_flag *)realloc(res->flags, sizeof(cmd_flag)*(res->count+1));
     cmd_flag * flag = res->flags + res->count;
     res->count++;
+
+    flag->name = flagName;
 
     if (strcmp(type, "bool") == 0) {
       flag->type = CMD_FLAG_TYPE_INT;
@@ -49,7 +52,7 @@ cmd_flags * cmd_flags_parse(const char * options, int argc, const char ** argv) 
       errno = 0;
       flag->value.timestamp = strtoull(argv[i], NULL, 10);
       if (errno || flag->value.timestamp == 0) {
-        fprintf(stderr, "invalid value for flag %s: %s\n", argv[i-1], argv[i]);
+        fprintf(stderr, "invalid value for flag %s: %s\n", flagName, argv[i]);
         cmd_flags_free(res);
         return NULL;
       }
@@ -111,12 +114,15 @@ static const char * flag_type(const char * options, const char * flagName) {
       break;
     }
     if (len != flagLen || memcmp(options, flagName, len) != 0) {
+      options += len;
       len = next_field(options, &options);
       if (len == 0) {
         break;
       }
+      options += len;
       continue;
     }
+    options += len;
     len = next_field(options, &options);
     if (len == 0) {
       break;
