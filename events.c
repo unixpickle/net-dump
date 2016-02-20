@@ -8,6 +8,7 @@ static client_event * read_mac_info(const u_char * macPacket, size_t len);
 static int radiotap_rssi(const u_char * header);
 static void print_hardware_address(hardware_address a);
 static void print_csv_escaped(const char * str);
+static void print_quote_escaped(const char * str);
 
 client_event * client_event_read(pcap_t * handle) {
   while (1) {
@@ -59,30 +60,30 @@ void client_event_log_csv(client_event * e) {
   }
   printf(",%llu,%d,%d,", (unsigned long long)e->timestamp.tv_sec, e->rssi, (int)e->data_size);
   print_hardware_address(e->client);
-  printf(",");
+  putc(',', stdout);
   print_hardware_address(e->accessPoint);
   if (e->request_info != NULL) {
-    printf(",");
+    putc(',', stdout);
     print_csv_escaped(e->request_info->path);
-    printf(",");
+    putc(',', stdout);
     print_csv_escaped(e->request_info->host);
-    printf(",");
+    putc(',', stdout);
     print_csv_escaped(e->request_info->user_agent);
   } else {
     printf(",,,");
   }
   if (e->response_info != NULL) {
-    printf(",");
+    printf(",\"");
     int headerIdx;
     for (headerIdx = 0; headerIdx < e->response_info->header_count; ++headerIdx) {
       if (headerIdx != 0) {
-        printf("\\n");
+        putc('\n', stdout);
       }
-      print_csv_escaped(e->response_info->header_names[headerIdx]);
+      print_quote_escaped(e->response_info->header_names[headerIdx]);
       printf(": ");
-      print_csv_escaped(e->response_info->header_values[headerIdx]);
+      print_quote_escaped(e->response_info->header_values[headerIdx]);
     }
-    printf("\n");
+    printf("\"\n");
   } else {
     printf(",\n");
   }
@@ -169,13 +170,34 @@ static void print_csv_escaped(const char * str) {
   if (str == NULL) {
     return;
   }
+
+  int containsSpecialChars = 0;
+  int len = strlen(str);
+  int i;
+
+  for (i = 0; i < len; ++i) {
+    if (str[i] == ',' || str[i] == '\n' || str[i] == '"') {
+      containsSpecialChars = 1;
+      break;
+    }
+  }
+
+  if (!containsSpecialChars) {
+    printf("%s", str);
+    return;
+  }
+
+  putc('"', stdout);
+  print_quote_escaped(str);
+  putc('"', stdout);
+}
+
+static void print_quote_escaped(const char * str) {
   int len = strlen(str);
   int i;
   for (i = 0; i < len; ++i) {
-    if (str[i] == '\\' || str[i] == ',') {
-      printf("\\%c", str[i]);
-    } else if (str[i] == '\n') {
-      printf("\\n");
+    if (str[i] == '"') {
+      printf("\"\"");
     } else {
       putc(str[i], stdout);
     }
