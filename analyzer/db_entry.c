@@ -1,11 +1,37 @@
 #include "db_entry.h"
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 
-static int read_line(FILE * f, char ** out);
-static int count_commas(const char * str);
-static int null_out_commas(char * str);
+static int read_csv_row(FILE * f, char ** out);
 static int compare_entries_time(const void * ptr1, const void * ptr2);
+
+#define CSV_PARSER_STARTING_CAPACITY 80
+
+typedef enum {
+  PARSER_STATE_FIELD_FIRST = 0,
+  PARSER_STATE_QUOTED_FIELD,
+  PARSER_STATE_UNQUOTED_FIELD,
+  PARSER_STATE_SEEN_QUOTE,
+  PARSER_STATE_ERROR,
+  PARSER_STATE_DONE
+} parser_state;
+
+typedef struct {
+  char * joinedFields;
+  int fieldCount;
+
+  int _capacity;
+  int _len;
+  parser_state _state;
+} csv_row_parser;
+
+static csv_row_parser * csv_row_parser_alloc();
+static void csv_row_parser_next(csv_row_parser * p, int ch);
+static int csv_row_parser_done(csv_row_parser * p);
+static int csv_row_parser_error(csv_row_parser * p);
+static void csv_row_parser_free_struct(csv_row_parser * p);
+static void csv_row_parser_free_all(csv_row_parser * p);
 
 db * db_read(FILE * f) {
   int capacity = 16;
@@ -14,30 +40,20 @@ db * db_read(FILE * f) {
   database->entries = (db_entry *)malloc(capacity * sizeof(db_entry));
 
   while (1) {
+    if (feof(f)) {
+      break;
+    }
+
     char * line;
-    int res = read_line(f, &line);
-    if (res == 1) {
+    int fieldCount = read_csv_row(f, &line);
+    if (fieldCount == 0) {
+      continue;
+    } else if (fieldCount < 0) {
       db_free(database);
       return NULL;
     }
 
-    if (strlen(line) == 0) {
-      free(line);
-      if (res == EOF) {
-        break;
-      } else {
-        continue;
-      }
-    }
-
-    int commaCount = count_commas(line);
-    if (commaCount != 9) {
-      free(line);
-      db_free(database);
-      return NULL;
-    }
-
-    if (null_out_commas(line) < 0) {
+    if (fieldCount != 10) {
       free(line);
       db_free(database);
       return NULL;
@@ -81,10 +97,6 @@ db * db_read(FILE * f) {
       line += strlen(line) + 1;
       (*(*fieldsPtr)) = line;
     }
-
-    if (res == EOF) {
-      break;
-    }
   }
 
   return database;
@@ -105,67 +117,38 @@ void db_free(db * database) {
   free(database);
 }
 
-static int read_line(FILE * f, char ** out) {
-  int len = 0;
-  int capacity = 80;
-  char * res = malloc(capacity);
-  res[0] = 0;
+static int read_csv_row(FILE * f, char ** out) {
+  csv_row_parser * p = csv_row_parser_alloc();
 
-  while (1) {
-    if (fgets(res+len, capacity-len, f) == NULL) {
-      if (feof(f)) {
-        (*out) = res;
-        return EOF;
-      } else {
-        free(res);
-        return 1;
-      }
-    }
+  flockfile(f);
+  while (!csv_row_parser_done(p) && !csv_row_parser_error(p)) {
+    int nextChar = getc_unlocked(f);
 
-    if (feof(f)) {
-      (*out) = res;
-      return EOF;
-    }
-
-    len += strlen(res+len);
-    if (res[len-1] == '\n') {
-      res[--len] = 0;
-      (*out) = res;
-      return 0;
-    }
-
-    capacity += 20;
-    res = realloc(res, capacity);
-  }
-}
-
-static int count_commas(const char * str) {
-  int count = 0;
-  for (; *str; ++str) {
-    if ((*str) == '\\') {
-      ++str;
-      if (!(*str)) {
+    if (nextChar == EOF) {
+      funlockfile(f);
+      if (ferror(f)) {
+        csv_row_parser_free_all(p);
         return -1;
       }
-    } else if ((*str) == ',') {
-      ++count;
+      flockfile(f);
     }
+
+    csv_row_parser_next(p, nextChar);
   }
+  funlockfile(f);
+
+  if (csv_row_parser_error(p)) {
+    csv_row_parser_free_all(p);
+    return -1;
+  } else if (p->fieldCount == 1 && !p->joinedFields[0]) {
+    csv_row_parser_free_all(p);
+    return 0;
+  }
+
+  (*out) = p->joinedFields;
+  int count = p->fieldCount;
+  csv_row_parser_free_struct(p);
   return count;
-}
-
-static int null_out_commas(char * str) {
-  for (; *str; ++str) {
-    if ((*str) == '\\') {
-      ++str;
-      if (!(*str)) {
-        return -1;
-      }
-    } else if ((*str) == ',') {
-      (*str) = 0;
-    }
-  }
-  return 0;
 }
 
 static int compare_entries_time(const void * e1, const void * e2) {
@@ -178,4 +161,115 @@ static int compare_entries_time(const void * e1, const void * e2) {
   } else {
     return 0;
   }
+}
+
+static csv_row_parser * csv_row_parser_alloc() {
+  csv_row_parser * res = (csv_row_parser *)malloc(sizeof(csv_row_parser));
+  bzero(res, sizeof(*res));
+  res->_capacity = CSV_PARSER_STARTING_CAPACITY;
+  res->joinedFields = (char *)malloc(res->_capacity);
+  res->fieldCount = 1;
+  return res;
+}
+
+static void csv_row_parser_next(csv_row_parser * p, int ch) {
+  int appendChar = -1;
+
+  switch (p->_state) {
+  case PARSER_STATE_FIELD_FIRST:
+    switch (ch) {
+    case -1:
+    case '\n':
+      appendChar = 0;
+      p->_state = PARSER_STATE_DONE;
+      break;
+    case '"':
+      p->_state = PARSER_STATE_QUOTED_FIELD;
+      break;
+    case ',':
+      ++p->fieldCount;
+      appendChar = 0;
+      break;
+    default:
+      p->_state = PARSER_STATE_UNQUOTED_FIELD;
+      appendChar = ch;
+    }
+    break;
+  case PARSER_STATE_QUOTED_FIELD:
+    switch (ch) {
+    case '"':
+      p->_state = PARSER_STATE_SEEN_QUOTE;
+      break;
+    default:
+      appendChar = ch;
+    }
+    break;
+  case PARSER_STATE_UNQUOTED_FIELD:
+    switch (ch) {
+    case '"':
+      p->_state = PARSER_STATE_ERROR;
+      break;
+    case ',':
+      appendChar = 0;
+      ++p->fieldCount;
+      p->_state = PARSER_STATE_FIELD_FIRST;
+      break;
+    case '\n':
+      appendChar = 0;
+      p->_state = PARSER_STATE_DONE;
+      break;
+    default:
+      appendChar = ch;
+    }
+    break;
+  case PARSER_STATE_SEEN_QUOTE:
+    switch (ch) {
+    case -1:
+    case '\n':
+      appendChar = 0;
+      p->_state = PARSER_STATE_DONE;
+      break;
+    case ',':
+      appendChar = 0;
+      p->_state = PARSER_STATE_FIELD_FIRST;
+      ++p->fieldCount;
+      break;
+    case '"':
+      appendChar = '"';
+      p->_state = PARSER_STATE_QUOTED_FIELD;
+      break;
+    default:
+      p->_state = PARSER_STATE_ERROR;
+    }
+    break;
+  default:
+    return;
+  }
+
+  if (appendChar < 0) {
+    return;
+  }
+
+  if (p->_capacity == p->_len) {
+    p->_capacity *= 2;
+    p->joinedFields = realloc(p->joinedFields, p->_capacity);
+  }
+  p->joinedFields[p->_len++] = (char)appendChar;
+}
+
+static int csv_row_parser_done(csv_row_parser * p) {
+  return p->_state == PARSER_STATE_DONE;
+}
+
+static int csv_row_parser_error(csv_row_parser * p) {
+  return p->_state == PARSER_STATE_ERROR;
+}
+
+static void csv_row_parser_free_struct(csv_row_parser * p) {
+  free(p);
+}
+
+static void csv_row_parser_free_all(csv_row_parser * p) {
+  free(p->joinedFields);
+  free(p);
 }
