@@ -8,15 +8,18 @@ static char * find_cookie_domain(char * headers);
 
 void hosts_command_help() {
   printf("Available flags:\n\n"
-    " -r            only extract hosts from requests, not responses.\n\n");
+    " -r            only extract hosts from requests, not responses.\n"
+    " -d            focus on a specific MAC.\n"
+    "\n");
 }
 
 void hosts_command(int argc, const char ** argv, db * database) {
-  cmd_flags * flags = cmd_flags_parse("-r bool", argc, argv);
+  cmd_flags * flags = cmd_flags_parse("-r bool -d string", argc, argv);
   if (flags == NULL) {
     return;
   }
   int useCookies = 1 - cmd_flags_get_int(flags, "-r", 0);
+  const char * focusMAC = cmd_flags_get_string(flags, "-d", NULL);
   cmd_flags_free(flags);
 
   string_counter * counter = string_counter_alloc();
@@ -24,6 +27,9 @@ void hosts_command(int argc, const char ** argv, db * database) {
   int i;
   for (i = 0; i < database->count; ++i) {
     db_entry entry = database->entries[i];
+    if (focusMAC != NULL && strcmp(entry.client, focusMAC) != 0) {
+      continue;
+    }
     if (entry.request_host[0] != 0) {
       string_counter_add(counter, entry.request_host, 1);
     }

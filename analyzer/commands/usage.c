@@ -1,11 +1,13 @@
 #include "usage.h"
 #include "../flags.h"
 #include "../graph.h"
+#include <string.h>
 
 void usage_command_help() {
   printf("Available flags:\n\n"
     " -s <start time>  starting epoch time.\n"
     " -e <end time>    ending epoch time.\n"
+    " -d <filter MAC>  focus on a specific MAC.\n"
     "\n");
 }
 
@@ -15,7 +17,7 @@ void usage_command(int argc, const char ** argv, db * database) {
     return;
   }
 
-  cmd_flags * flags = cmd_flags_parse("-s time -e time", argc, argv);
+  cmd_flags * flags = cmd_flags_parse("-s time -e time -d string", argc, argv);
   if (flags == NULL) {
     return;
   }
@@ -25,6 +27,7 @@ void usage_command(int argc, const char ** argv, db * database) {
   unsigned long long startTime = cmd_flags_get_time(flags, "-s", database->entries[0].timestamp);
   unsigned long long endTime = cmd_flags_get_time(flags, "-e",
     database->entries[database->count-1].timestamp);
+  const char * filterMAC = cmd_flags_get_string(flags, "-d", NULL);
   cmd_flags_free(flags);
 
   int bufferSize = 16;
@@ -39,6 +42,8 @@ void usage_command(int argc, const char ** argv, db * database) {
     if (entry.timestamp < startTime) {
       continue;
     } else if (entry.timestamp > endTime) {
+      continue;
+    } else if (filterMAC != NULL && strcmp(entry.client, filterMAC) != 0) {
       continue;
     }
     while (entry.timestamp >= currentMinute+60) {
