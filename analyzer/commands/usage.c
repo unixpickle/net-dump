@@ -11,14 +11,22 @@ void usage_command_help() {
     "\n");
 }
 
-void usage_command(int argc, const char ** argv, db * database) {
+void usage_command(int argc, const char ** argv, FILE * dbFile) {
+  db * database = db_read(dbFile);
+  if (database == NULL) {
+    fprintf(stderr, "failed to read database.\n");
+    return;
+  }
+
   if (database->count == 0) {
+    db_free(database);
     printf("Nothing to graph.\n");
     return;
   }
 
   cmd_flags * flags = cmd_flags_parse("-s time -e time -d string", argc, argv);
   if (flags == NULL) {
+    db_free(database);
     return;
   }
 
@@ -68,4 +76,5 @@ void usage_command(int argc, const char ** argv, db * database) {
   print_graph(values, valueCount);
 
   free(values);
+  db_free(database);
 }

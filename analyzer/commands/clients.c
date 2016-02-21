@@ -6,7 +6,13 @@ void clients_command_help() {
   printf("No arguments for `clients`.\n");
 }
 
-void clients_command(int argc, const char ** argv, db * database) {
+void clients_command(int argc, const char ** argv, FILE * dbFile) {
+  db * database = db_read(dbFile);
+  if (database == NULL) {
+    fprintf(stderr, "failed to read database.\n");
+    return;
+  }
+
   string_counter * counter = string_counter_alloc();
 
   int i;
@@ -23,4 +29,5 @@ void clients_command(int argc, const char ** argv, db * database) {
   }
 
   string_counter_free(counter);
+  db_free(database);
 }

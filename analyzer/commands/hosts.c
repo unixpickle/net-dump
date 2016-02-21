@@ -13,9 +13,16 @@ void hosts_command_help() {
     "\n");
 }
 
-void hosts_command(int argc, const char ** argv, db * database) {
+void hosts_command(int argc, const char ** argv, FILE * dbFile) {
+  db * database = db_read(dbFile);
+  if (database == NULL) {
+    fprintf(stderr, "failed to read database.\n");
+    return;
+  }
+
   cmd_flags * flags = cmd_flags_parse("-r bool -d string", argc, argv);
   if (flags == NULL) {
+    db_free(database);
     return;
   }
   int useCookies = 1 - cmd_flags_get_int(flags, "-r", 0);
@@ -58,6 +65,7 @@ void hosts_command(int argc, const char ** argv, db * database) {
   }
 
   string_counter_free(counter);
+  db_free(database);
 }
 
 static char * find_cookie_domain(char * headers) {

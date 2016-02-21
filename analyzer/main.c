@@ -27,15 +27,9 @@ int main(int argc, const char ** argv) {
     fprintf(stderr, "failed to open database file.\n");
     return 1;
   }
-  db * database = db_read(dbFile);
-  fclose(dbFile);
-  if (database == NULL) {
-    fprintf(stderr, "failed to read database file.\n");
-    return 1;
-  }
 
   const char * names[3] = {"clients", "hosts", "usage"};
-  void (* commands[3])(int, const char **, db *) = {
+  void (* commands[3])(int, const char **, FILE *) = {
     clients_command,
     hosts_command,
     usage_command
@@ -45,13 +39,13 @@ int main(int argc, const char ** argv) {
   int i;
   for (i = 0; i < sizeof(names)/sizeof(*names); ++i) {
     if (strcmp(names[i], cmd) == 0) {
-      commands[i](argc-3, argv+2, database);
-      db_free(database);
+      commands[i](argc-3, argv+2, dbFile);
+      fclose(dbFile);
       return 0;
     }
   }
 
-  db_free(database);
+  fclose(dbFile);
   fprintf(stderr, "unknown command: %s\n", cmd);
   return 1;
 }
