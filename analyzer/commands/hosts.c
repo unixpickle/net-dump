@@ -8,35 +8,33 @@ static char * find_cookie_domain(char * headers);
 
 void hosts_command_help() {
   printf("Available flags:\n\n"
-    " -r            only extract hosts from requests, not responses.\n"
-    " -d            focus on a specific MAC.\n"
+    " -r               only extract hosts from requests, not responses.\n"
+    " -s <start time>  starting epoch time.\n"
+    " -e <end time>    ending epoch time.\n"
+    " -d <filter MAC>  focus on a specific MAC.\n"
     "\n");
 }
 
 void hosts_command(int argc, const char ** argv, FILE * dbFile) {
-  db * database = db_read(dbFile);
+  cmd_flags * flags = cmd_flags_parse("-r bool -s time -e time -d string", argc, argv);
+  if (flags == NULL) {
+    return;
+  }
+  int useCookies = 1 - cmd_flags_get_int(flags, "-r", 0);
+  db_filter filter = db_filter_from_flags(flags);
+  cmd_flags_free(flags);
+
+  db * database = db_read_filtered(dbFile, filter);
   if (database == NULL) {
     fprintf(stderr, "failed to read database.\n");
     return;
   }
-
-  cmd_flags * flags = cmd_flags_parse("-r bool -d string", argc, argv);
-  if (flags == NULL) {
-    db_free(database);
-    return;
-  }
-  int useCookies = 1 - cmd_flags_get_int(flags, "-r", 0);
-  const char * focusMAC = cmd_flags_get_string(flags, "-d", NULL);
-  cmd_flags_free(flags);
 
   string_counter * counter = string_counter_alloc();
 
   int i;
   for (i = 0; i < database->count; ++i) {
     db_entry entry = database->entries[i];
-    if (focusMAC != NULL && strcmp(entry.client, focusMAC) != 0) {
-      continue;
-    }
     if (entry.request_host[0] != 0) {
       string_counter_add(counter, entry.request_host, 1);
     }
