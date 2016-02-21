@@ -12,7 +12,14 @@ void usage_command_help() {
 }
 
 void usage_command(int argc, const char ** argv, FILE * dbFile) {
-  db * database = db_read(dbFile);
+  cmd_flags * flags = cmd_flags_parse("-s time -e time -d string", argc, argv);
+  if (flags == NULL) {
+    return;
+  }
+  db_filter filter = db_filter_from_flags(flags);
+  cmd_flags_free(flags);
+
+  db * database = db_read_filtered(dbFile, filter);
   if (database == NULL) {
     fprintf(stderr, "failed to read database.\n");
     return;
@@ -20,40 +27,21 @@ void usage_command(int argc, const char ** argv, FILE * dbFile) {
 
   if (database->count == 0) {
     db_free(database);
-    printf("Nothing to graph.\n");
-    return;
-  }
-
-  cmd_flags * flags = cmd_flags_parse("-s time -e time -d string", argc, argv);
-  if (flags == NULL) {
-    db_free(database);
+    printf("nothing to graph.\n");
     return;
   }
 
   db_sort(database);
 
-  unsigned long long startTime = cmd_flags_get_time(flags, "-s", database->entries[0].timestamp);
-  unsigned long long endTime = cmd_flags_get_time(flags, "-e",
-    database->entries[database->count-1].timestamp);
-  const char * filterMAC = cmd_flags_get_string(flags, "-d", NULL);
-  cmd_flags_free(flags);
-
   int bufferSize = 16;
   int valueCount = 0;
   double * values = (double *)malloc(sizeof(double) * bufferSize);
 
-  unsigned long long currentMinute = startTime;
+  unsigned long long currentMinute = database->entries[0].timestamp;
   double currentValue = 0;
   int i;
   for (i = 0; i < database->count; ++i) {
     db_entry entry = database->entries[i];
-    if (entry.timestamp < startTime) {
-      continue;
-    } else if (entry.timestamp > endTime) {
-      continue;
-    } else if (filterMAC != NULL && strcmp(entry.client, filterMAC) != 0) {
-      continue;
-    }
     while (entry.timestamp >= currentMinute+60) {
       if (valueCount == bufferSize) {
         bufferSize *= 2;
