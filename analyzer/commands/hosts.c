@@ -70,7 +70,7 @@ static char * find_cookie_domain(char * headers) {
       ssize_t start = i+7;
       for (i = start; i < len; ++i) {
         char ch = headers[i];
-        if (ch == ';' || ch == '\\') {
+        if (ch == ';' || ch == '\n') {
           break;
         }
       }
