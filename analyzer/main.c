@@ -3,7 +3,7 @@
 #include "commands/clients.h"
 #include "commands/hosts.h"
 #include "commands/usage.h"
-#include "db_entry.h"
+#include "db.h"
 
 static void print_usage();
 static int print_help(const char * command);

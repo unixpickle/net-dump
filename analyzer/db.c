@@ -1,4 +1,4 @@
-#include "db_entry.h"
+#include "db.h"
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
