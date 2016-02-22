@@ -1,24 +1,8 @@
-#ifndef __DB_ENTRY_H__
-#define __DB_ENTRY_H__
+#ifndef __DB_H__
+#define __DB_H__
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "db_entry.h"
 #include "flags.h"
-
-typedef struct {
-  char *             type;
-  unsigned long long timestamp;
-  int                rssi;
-  size_t             size;
-  char *             client;
-  char *             access_point;
-
-  char *             request_path;
-  char *             request_host;
-  char *             request_user_agent;
-
-  char *             response_headers;
-} db_entry;
 
 // A db_filter specifies various restrictions on a database's entries.
 typedef struct {

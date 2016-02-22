@@ -1,6 +1,7 @@
 #include "usage.h"
 #include "../flags.h"
 #include "../graph.h"
+#include <stdlib.h>
 #include <string.h>
 
 void usage_command_help() {
