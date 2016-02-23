@@ -31,7 +31,8 @@ void string_counter_add(string_counter * c, const char * str, unsigned long long
     ++c->count;
 
     bzero(entry, sizeof(*entry));
-    entry->str = str;
+    entry->str = (char *)malloc(strlen(str) + 1);
+    strcpy(entry->str, str);
   }
 
   entry->count += (unsigned long long)count;
@@ -42,6 +43,10 @@ void string_counter_sort(string_counter * c) {
 }
 
 void string_counter_free(string_counter * c) {
+  int i;
+  for (i = 0; i < c->count; ++i) {
+    free(c->entries[i].str);
+  }
   free(c->entries);
   free(c);
 }

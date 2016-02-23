@@ -24,17 +24,23 @@ void hosts_command(int argc, const char ** argv, FILE * dbFile) {
   db_filter filter = db_filter_from_flags(flags);
   cmd_flags_free(flags);
 
-  db * database = db_read_filtered(dbFile, filter);
-  if (database == NULL) {
-    fprintf(stderr, "failed to read database.\n");
-    return;
-  }
-
   string_counter * counter = string_counter_alloc();
 
-  int i;
-  for (i = 0; i < database->count; ++i) {
-    db_entry entry = database->entries[i];
+  while (1) {
+    db_entry entry;
+    int res = db_entry_read(dbFile, &entry);
+    if (res == -1) {
+      break;
+    } else if (res == 1) {
+      fprintf(stderr, "failed to read database.\n");
+      string_counter_free(counter);
+      return;
+    }
+
+    if (!db_filter_matches(filter, &entry)) {
+      db_entry_free_fields(&entry);
+      continue;
+    }
     if (entry.request_host[0] != 0) {
       string_counter_add(counter, entry.request_host, 1);
     }
@@ -44,10 +50,12 @@ void hosts_command(int argc, const char ** argv, FILE * dbFile) {
         string_counter_add(counter, cookieDomain, 1);
       }
     }
+    db_entry_free_fields(&entry);
   }
 
   string_counter_sort(counter);
 
+  int i;
   for (i = 0; i < counter->count; ++i) {
     string_counter_entry entry = counter->entries[i];
 
@@ -63,7 +71,6 @@ void hosts_command(int argc, const char ** argv, FILE * dbFile) {
   }
 
   string_counter_free(counter);
-  db_free(database);
 }
 
 static char * find_cookie_domain(char * headers) {

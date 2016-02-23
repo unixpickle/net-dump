@@ -1,5 +1,5 @@
 typedef struct {
-  const char * str;
+  char * str;
   unsigned long long count;
 } string_counter_entry;
 

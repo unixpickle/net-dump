@@ -7,27 +7,30 @@ void clients_command_help() {
 }
 
 void clients_command(int argc, const char ** argv, FILE * dbFile) {
-  db * database = db_read(dbFile);
-  if (database == NULL) {
-    fprintf(stderr, "failed to read database.\n");
-    return;
-  }
-
   string_counter * counter = string_counter_alloc();
 
-  int i;
-  for (i = 0; i < database->count; ++i) {
-    db_entry entry = database->entries[i];
+  while (1) {
+    db_entry entry;
+    int res = db_entry_read(dbFile, &entry);
+    if (res == -1) {
+      break;
+    } else if (res == 1) {
+      fprintf(stderr, "failed to read database.\n");
+      string_counter_free(counter);
+      return;
+    }
+
     string_counter_add(counter, entry.client, (unsigned long long)entry.size);
+    db_entry_free_fields(&entry);
   }
 
   string_counter_sort(counter);
 
+  int i;
   for (i = 0; i < counter->count; ++i) {
     string_counter_entry entry = counter->entries[i];
     printf("%s - %llu bytes\n", entry.str, entry.count);
   }
 
   string_counter_free(counter);
-  db_free(database);
 }
