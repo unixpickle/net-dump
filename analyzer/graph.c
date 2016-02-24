@@ -22,7 +22,7 @@ void print_graph_at_size(double * values, int pointCount, int cols, int rows) {
   for (row = rows; row > 0; --row) {
     printf("|");
     for (col = 0; col < cols; ++col) {
-      int height = (int)lround((double)cols * columns[col] / maxValue);
+      int height = (int)lround((double)rows * columns[col] / maxValue);
       if (height >= row) {
         printf("#");
       } else {
