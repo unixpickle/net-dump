@@ -23,10 +23,15 @@ int main(int argc, const char ** argv) {
     return print_help(argv[2]);
   }
 
-  FILE * dbFile = fopen(argv[argc-1], "r");
-  if (dbFile == NULL) {
-    fprintf(stderr, "failed to open database file.\n");
-    return 1;
+  FILE * dbFile;
+  if (strcmp(argv[argc-1], "--stdin") != 0) {
+    dbFile = fopen(argv[argc-1], "r");
+    if (dbFile == NULL) {
+      fprintf(stderr, "failed to open database file.\n");
+      return 1;
+    }
+  } else {
+    dbFile = stdin;
   }
 
   const char * names[] = {"clients", "hosts", "usage", "histogram"};
@@ -54,12 +59,14 @@ int main(int argc, const char ** argv) {
 
 static void print_usage(const char ** argv) {
   fprintf(stderr, "Usage: %s <command> [flags] <file.csv>\n"
+    "  or   %s <command> [flags] --stdin\n"
     "  or   %s help <command>\n"
     "Available commands are:\n"
     " clients       list client MAC addresses\n"
     " hosts         list HTTP/1.1 Host header values\n"
     " usage         graph data usage over time\n"
-    " histogram     print histograms for average data usage\n", argv[0], argv[0]);
+    " histogram     print histograms for average data usage\n",
+    argv[0], argv[0], argv[0]);
 }
 
 static int print_help(const char * command) {
