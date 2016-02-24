@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "commands/clients.h"
+#include "commands/histogram.h"
 #include "commands/hosts.h"
 #include "commands/usage.h"
 #include "db.h"
@@ -28,11 +29,12 @@ int main(int argc, const char ** argv) {
     return 1;
   }
 
-  const char * names[3] = {"clients", "hosts", "usage"};
-  void (* commands[3])(int, const char **, FILE *) = {
+  const char * names[] = {"clients", "hosts", "usage", "histogram"};
+  void (* commands[])(int, const char **, FILE *) = {
     clients_command,
     hosts_command,
-    usage_command
+    usage_command,
+    histogram_command
   };
 
   const char * cmd = argv[1];
@@ -56,15 +58,17 @@ static void print_usage(const char ** argv) {
     "Available commands are:\n"
     " clients       list client MAC addresses\n"
     " hosts         list HTTP/1.1 Host header values\n"
-    " usage         graph data usage over time\n", argv[0], argv[0]);
+    " usage         graph data usage over time\n"
+    " histogram     print histograms for average data usage\n", argv[0], argv[0]);
 }
 
 static int print_help(const char * command) {
-  const char * names[3] = {"clients", "usage", "hosts"};
-  void (* helpers[3])() = {
+  const char * names[] = {"clients", "usage", "hosts", "histogram"};
+  void (* helpers[])() = {
     clients_command_help,
     usage_command_help,
-    hosts_command_help
+    hosts_command_help,
+    histogram_command_help
   };
   int i;
   for (i = 0; i < sizeof(helpers)/sizeof(*helpers); ++i) {
