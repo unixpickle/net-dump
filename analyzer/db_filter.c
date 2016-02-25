@@ -50,7 +50,7 @@ int db_filter_matches(db_filter f, db_entry * e) {
   if (f.dayMask != 0x7f) {
     struct tm t;
     time_t timestamp = (time_t)e->timestamp;
-    gmtime_r(&timestamp, &t);
+    localtime_r(&timestamp, &t);
     if (!(f.dayMask & (1 << t.tm_wday))) {
       return 0;
     }

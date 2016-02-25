@@ -2,6 +2,7 @@
 #include "../db.h"
 #include "../graph.h"
 #include <stdlib.h>
+#include <strings.h>
 #include <time.h>
 
 #define DAY_LENGTH 24
@@ -70,6 +71,7 @@ static double * daily_histogram(FILE * dbFile, db_filter filter) {
 static double * histogram(FILE * dbFile, db_filter filter, int valueCount,
                           int (* category)(time_t ts)) {
   double * res = (double *)malloc(valueCount * sizeof(double));
+  bzero(res, valueCount*sizeof(double));
 
   while (1) {
     db_entry entry;
@@ -96,12 +98,12 @@ static double * histogram(FILE * dbFile, db_filter filter, int valueCount,
 
 static int timestamp_hour(time_t ts) {
   struct tm t;
-  gmtime_r(&ts, &t);
+  localtime_r(&ts, &t);
   return t.tm_hour;
 }
 
 static int timestamp_day_of_week(time_t ts) {
   struct tm t;
-  gmtime_r(&ts, &t);
+  localtime_r(&ts, &t);
   return t.tm_wday;
 }
