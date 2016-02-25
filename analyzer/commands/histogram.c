@@ -8,6 +8,12 @@
 #define DAY_LENGTH 24
 #define WEEK_LENGTH 7
 
+#define DAY_WIDTH 48
+#define WEEK_WIDTH 21
+
+static const char * DAY_LABELS = " 0 1 2 3 4 5 6 7 8 9 10  12  14  16  18  20  22";
+static const char * WEEK_LABELS = " Su Mo Tu We Th Fr Sa";
+
 static double * weekly_histogram(FILE * dbFile, db_filter filter);
 static double * daily_histogram(FILE * dbFile, db_filter filter);
 static double * histogram(FILE * dbFile, db_filter filter, int valueCount,
@@ -37,13 +43,19 @@ void histogram_command(int argc, const char ** argv, FILE * dbFile) {
   cmd_flags_free(flags);
 
   double * histogram;
+  const char * labels;
   int histogramCount;
+  int graphWidth;
   if (weekly) {
     histogram = weekly_histogram(dbFile, filter);
     histogramCount = WEEK_LENGTH;
+    graphWidth = WEEK_WIDTH;
+    labels = WEEK_LABELS;
   } else {
     histogram = daily_histogram(dbFile, filter);
     histogramCount = DAY_LENGTH;
+    graphWidth = DAY_WIDTH;
+    labels = DAY_LABELS;
   }
 
   if (histogram == NULL) {
@@ -51,12 +63,8 @@ void histogram_command(int argc, const char ** argv, FILE * dbFile) {
     return;
   }
 
-  int graphWidth = histogramCount * (DEFAULT_GRAPH_WIDTH / histogramCount);
-  if (graphWidth == 0) {
-    graphWidth = histogramCount;
-  }
-
   print_graph_at_size(histogram, histogramCount, graphWidth, DEFAULT_GRAPH_HEIGHT);
+  printf("%s\n", labels);
   free(histogram);
 }
 
