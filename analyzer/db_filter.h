@@ -18,6 +18,10 @@ typedef struct {
   // endTime is an epoch time indicating the last allowed timestamp.
   // If this is 0, no upper bound is used.
   unsigned long long endTime;
+
+  // dayMask decides which days of the week (Sunday=0 - Saturday=6) are allowed.
+  // If a day d is allowed, then (dayMask & (1 << d)) != 0.
+  int dayMask;
 } db_filter;
 
 db_filter db_filter_from_flags(cmd_flags * flags);

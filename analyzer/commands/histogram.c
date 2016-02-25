@@ -18,6 +18,8 @@ static int timestamp_day_of_week(time_t ts);
 void histogram_command_help() {
   printf("Available flags:\n\n"
     " -w               show a weekly histogram rather than a daily one.\n"
+    " -m               a bitmask indicating which days of the week to\n"
+    "                  include. Default: 1111111."
     " -s <start time>  starting epoch time.\n"
     " -e <end time>    ending epoch time.\n"
     " -d <filter MAC>  focus on a specific MAC.\n"
@@ -25,7 +27,7 @@ void histogram_command_help() {
 }
 
 void histogram_command(int argc, const char ** argv, FILE * dbFile) {
-  cmd_flags * flags = cmd_flags_parse("-w bool -s time -e time -d string", argc, argv);
+  cmd_flags * flags = cmd_flags_parse("-w bool -m string -s time -e time -d string", argc, argv);
   if (flags == NULL) {
     return;
   }
